@@ -1,46 +1,44 @@
-# 📌 Aplikasi Pemesanan Rental Warnet (Java Swing)
+# Pengecek Tahun Kabisat 🗓️
 
-## 📖 Deskripsi
-Aplikasi **Pemesanan Rental Warnet** adalah aplikasi berbasis **Java Swing** yang digunakan untuk melakukan pencatatan dan pengelolaan data pemesanan rental warnet.
-Aplikasi ini mendukung proses **CRUD (Create, Read, Update, Delete)** serta memiliki fitur **penyimpanan data permanen**, sehingga data tidak hilang meskipun aplikasi ditutup.
+Aplikasi konsol sederhana berbasis Java untuk menentukan apakah suatu tahun adalah Tahun Kabisat.
+Program ini dirancang sebagai contoh praktik *refactoring* dengan mengimplementasikan prinsip-prinsip seperti:
+**Extract Method**, **Inline Variable**, **Move Method**, **Introduce Parameter Object**, dan **Rename Method/Variable**.
 
-Aplikasi dibuat sebagai bagian dari **tugas praktikum / UAS / project mata kuliah Pemrograman Java GUI**.
+## Struktur Program (Hasil Refactoring)
 
----
+Program telah dibagi menjadi beberapa komponen untuk meningkatkan modularitas dan keterbacaan:
 
-## 🎯 Fitur Utama
-- Input data pemesanan rental
-- Tampilan data menggunakan `JTable`
-- CRUD data (Tambah, Update, Hapus, Reset)
-- Pilihan jam otomatis (08.00 – 23.00)
-- Penyimpanan data menggunakan **File Serialization**
-- Data tetap tersimpan meskipun program ditutup
-- Antarmuka berbasis **Java Swing (GUI)**
+1.  **`MainApp`**: Kelas utama yang menangani *input* dari pengguna dan mengorkestrasi proses.
+2.  **`ITahunChecker`** (Interface) & **`TahunKabisatImpl`**: Mengandung **logika bisnis** utama untuk menentukan kabisat. Terpisah dari I/O.
+    * *Refactoring:* **Extract Method** (untuk `isDivisibleBy4`, `isDivisibleBy100`, `isDivisibleBy400`) dan **Inline Variable**.
+3.  **`OutputPrinter`**: Bertanggung jawab khusus untuk **mencetak hasil** ke konsol. Terpisah dari logika pengecekan.
+    * *Refactoring:* **Move Method/Field**.
+4.  **`YearData`**: Objek data sederhana (Parameter Object) untuk mengemas tahun dan label output.
+    * *Refactoring:* **Introduce Parameter Object**.
 
----
+## Cara Menjalankan
 
-## 🧾 Data yang Dikelola
-Aplikasi ini mengelola data berikut:
-1. Nama Reservasi
-2. Nomor WhatsApp
-3. Tempat Rental (Begawan, Sulfat)
-4. Lokasi / Paket:
-   - Reguler PS3
-   - Reguler PS4
-   - Privat PS3 + Netflix
-   - Privat PS4 + Netflix
-   - VVIP
-5. Jam Mulai (08.00 – 23.00)
-6. Jam Selesai (08.00 – 23.00)
+### Persyaratan
 
----
+* Java Development Kit (JDK) 8 atau yang lebih baru.
 
-## 🛠️ Teknologi yang Digunakan
-- Bahasa Pemrograman: **Java**
-- GUI Framework: **Java Swing**
-- Penyimpanan Data: **File I/O (ObjectOutputStream & ObjectInputStream)**
-- IDE: IntelliJ IDEA / NetBeans (opsional)
+### Kompilasi dan Eksekusi
 
----
+Asumsikan semua file berada dalam satu direktori tanpa *package*:
 
-## 📂 Struktur Project
+1.  **Kompilasi:**
+    ```bash
+    javac MainApp.java TahunKabisatImpl.java OutputPrinter.java YearData.java
+    ```
+
+2.  **Eksekusi:**
+    ```bash
+    java MainApp
+    ```
+
+### Contoh Sesi
+```bash
+    === Pengecek Tahun Kabisat === 
+    Masukkan tahun yang ingin Anda cek: 2024 
+    Hasil: 2024 adalah Tahun Kabisat.
+```
