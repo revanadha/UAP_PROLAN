@@ -1,44 +1,89 @@
-# Pengecek Tahun Kabisat 🗓️
+# 🎮 Sistem Pemesanan Rental Warnet  
+### Java Swing Desktop Application
 
-Aplikasi konsol sederhana berbasis Java untuk menentukan apakah suatu tahun adalah Tahun Kabisat.
-Program ini dirancang sebagai contoh praktik *refactoring* dengan mengimplementasikan prinsip-prinsip seperti:
-**Extract Method**, **Inline Variable**, **Move Method**, **Introduce Parameter Object**, dan **Rename Method/Variable**.
+---
 
-## Struktur Program (Hasil Refactoring)
+Aplikasi desktop berbasis **Java Swing** untuk mengelola data **pemesanan rental warnet** secara efisien.  
+Proyek ini dikembangkan untuk memenuhi **tugas mata kuliah Pemrograman Java GUI**, dengan fokus pada penerapan **CRUD**, **JTable**, serta **penyimpanan data permanen** menggunakan File I/O.
 
-Program telah dibagi menjadi beberapa komponen untuk meningkatkan modularitas dan keterbacaan:
+Aplikasi dirancang dengan tampilan modern, validasi input yang ketat, dan struktur kode yang rapi.
 
-1.  **`MainApp`**: Kelas utama yang menangani *input* dari pengguna dan mengorkestrasi proses.
-2.  **`ITahunChecker`** (Interface) & **`TahunKabisatImpl`**: Mengandung **logika bisnis** utama untuk menentukan kabisat. Terpisah dari I/O.
-    * *Refactoring:* **Extract Method** (untuk `isDivisibleBy4`, `isDivisibleBy100`, `isDivisibleBy400`) dan **Inline Variable**.
-3.  **`OutputPrinter`**: Bertanggung jawab khusus untuk **mencetak hasil** ke konsol. Terpisah dari logika pengecekan.
-    * *Refactoring:* **Move Method/Field**.
-4.  **`YearData`**: Objek data sederhana (Parameter Object) untuk mengemas tahun dan label output.
-    * *Refactoring:* **Introduce Parameter Object**.
+---
 
-## Cara Menjalankan
+## 🚀 Fitur Utama
 
-### Persyaratan
+Sesuai dengan kriteria tugas, aplikasi ini mencakup:
 
-* Java Development Kit (JDK) 8 atau yang lebih baru.
+- **Full CRUD (Create, Read, Update, Delete)**  
+  Mengelola data pemesanan rental warnet secara real-time.
 
-### Kompilasi dan Eksekusi
+- **Multi-Page Interface (Konseptual)**  
+  Pemisahan antara **Form Input Data** dan **Halaman Tabel Data**.
 
-Asumsikan semua file berada dalam satu direktori tanpa *package*:
+- **Validasi Input**  
+  Sistem akan menampilkan peringatan apabila data wajib belum diisi.
 
-1.  **Kompilasi:**
-    ```bash
-    javac MainApp.java TahunKabisatImpl.java OutputPrinter.java YearData.java
-    ```
+- **Pilihan Jam Otomatis**  
+  Jam mulai dan jam selesai tersedia dalam rentang **08.00 – 23.00** menggunakan `JComboBox`.
 
-2.  **Eksekusi:**
-    ```bash
-    java MainApp
-    ```
+- **Penyimpanan Data Permanen**  
+  Data tetap tersimpan meskipun aplikasi ditutup.
 
-### Contoh Sesi
-```bash
-    === Pengecek Tahun Kabisat ===
-    Masukkan tahun yang ingin Anda cek: 2024
-    Hasil: 2024 adalah Tahun Kabisat.
-```
+- **Modern UI**  
+  Styling tombol, penggunaan font *Segoe UI*, dan tampilan `JTable` yang rapi.
+
+---
+
+## 🧾 Data yang Dikelola
+
+Aplikasi ini mengelola data berikut:
+
+- Nama Reservasi  
+- Nomor WhatsApp  
+- Tempat Rental  
+  - Begawan  
+  - Sulfat  
+- Paket / Lokasi:
+  - Reguler PS3  
+  - Reguler PS4  
+  - Privat PS3 + Netflix  
+  - Privat PS4 + Netflix  
+  - VVIP  
+- Jam Mulai (08.00 – 23.00)  
+- Jam Selesai (08.00 – 23.00)  
+
+---
+
+## 🧱 Arsitektur Aplikasi
+
+Aplikasi ini menggunakan pendekatan **Single-Class GUI Application** dengan pemisahan logika sebagai berikut:
+
+- **View & Controller**  
+  - `HelloApplication.java`  
+  Menangani tampilan GUI, event handling, dan interaksi pengguna.
+
+- **Data Model (JTable)**  
+  - `DefaultTableModel`  
+  Digunakan untuk mengelola dan menampilkan data pemesanan.
+
+- **Persistence Layer**  
+  - File Serialization (`ObjectOutputStream` & `ObjectInputStream`)  
+  Digunakan untuk menyimpan dan memuat data dari file lokal.
+
+---
+
+## 💾 Mekanisme Penyimpanan Data
+
+- Data disimpan dalam file lokal:
+
+## 📂 Struktur Project
+📁 src
+└── 📁 main
+└── 📁 java
+└── 📁 com
+└── 📁 example
+└── 📁 tugas
+└── 📄 HelloApplication.java
+📄 module-info.java
+📄 data_rental.dat
+📄 README.md
