@@ -18,7 +18,7 @@ Sesuai dengan kriteria tugas, aplikasi ini mencakup:
   Mengelola data pemesanan rental warnet secara real-time.
 
 - **Multi-Page Interface (Konseptual)**  
-  Pemisahan antara **Form Input Data** dan **Halaman Tabel Data**.
+  Pemisahan antara **Form Input d** dan **Halaman Tabel Data**.
 
 - **Validasi Input**  
   Sistem akan menampilkan peringatan apabila data wajib belum diisi.
@@ -75,3 +75,15 @@ Aplikasi ini menggunakan pendekatan **Single-Class GUI Application** dengan pemi
 ## 💾 Mekanisme Penyimpanan Data
 
 - Data disimpan dalam file lokal:
+
+## 📂 Struktur Project
+📁 src
+└── 📁 main
+└── 📁 java
+└── 📁 com
+└── 📁 example
+└── 📁 tugas
+└── 📄 main.HelloApplication.java
+📄 module-info.java
+📄 data_rental.dat
+📄 README.md

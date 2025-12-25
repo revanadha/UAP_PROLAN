@@ -59,7 +59,7 @@ Aplikasi ini mengelola data berikut:
 Aplikasi ini menggunakan pendekatan **Single-Class GUI Application** dengan pemisahan logika sebagai berikut:
 
 - **View & Controller**  
-  - `HelloApplication.java`  
+  - `main.HelloApplication.java`  
   Menangani tampilan GUI, event handling, dan interaksi pengguna.
 
 - **Data Model (JTable)**  
@@ -83,7 +83,7 @@ Aplikasi ini menggunakan pendekatan **Single-Class GUI Application** dengan pemi
 └── 📁 com
 └── 📁 example
 └── 📁 tugas
-└── 📄 HelloApplication.java
+└── 📄 main.HelloApplication.java
 📄 module-info.java
 📄 data_rental.dat
 📄 README.md
