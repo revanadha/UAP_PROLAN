@@ -1,81 +1,345 @@
 package main;
 
 import controller.RentalController;
+
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.text.NumberFormat;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
-public class order extends JDialog {
-    private JTextField tfNama, tfWa;
-    private JComboBox<String> cbTempat, cbLokasi, cbJamMulai, cbJamSelesai;
-    private int editRowIndex = -1; // -1 artinya Mode Tambah Baru
+public class order extends JPanel {
 
-    // Konstruktor Overloading: Jika index == -1 (Tambah), jika index >= 0 (Edit)
-    public order(JFrame parent, RentalController controller, int rowIndex, Object[] existingData) {
-        super(parent, rowIndex == -1 ? "Form Tambah Pesanan" : "Edit Pesanan", true);
-        this.editRowIndex = rowIndex;
+    private RentalController controller;
+    private JTextField tfNoPC, tfNama, tfJamMulai, tfDurasi, tfHarga;
+    private JLabel lblTotal;
+    private JPanel pcGridPanel;
+    private Timer timerJam; // Timer untuk jam digital
 
-        setSize(400, 500);
-        setLocationRelativeTo(parent);
-        setLayout(new BorderLayout(10, 10));
+    // Warna
+    private final Color COL_BG = new Color(241, 245, 249);
+    private final Color COL_BLUE = new Color(37, 99, 235);
+    private final Color COL_RED_BG = new Color(254, 226, 226);
+    private final Color COL_RED_TXT = new Color(153, 27, 27);
+    private final Color COL_GREEN_BG = new Color(220, 252, 231);
+    private final Color COL_GREEN_TXT = new Color(22, 101, 52);
+    private final Color COL_YELLOW_BG = new Color(254, 249, 195);
+    private final Color COL_YELLOW_BORDER = new Color(250, 204, 21);
 
-        JPanel formPanel = new JPanel(new GridLayout(6, 2, 10, 10));
-        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+    public order(RentalController controller) {
+        this.controller = controller;
+        setLayout(new BorderLayout());
+        setBackground(COL_BG);
+        setBorder(new EmptyBorder(10, 15, 10, 15));
 
-        // Input Fields
-        tfNama = new JTextField();
-        tfWa = new JTextField();
-        cbTempat = new JComboBox<>(new String[]{"Begawan", "Sulfat"});
-        cbLokasi = new JComboBox<>(new String[]{"Reguler GEMERS 1", "Reguler GEMERS 2", "VVIP"});
+        // --- KARTU UTAMA ---
+        JPanel card = new RoundedPanel(20, Color.WHITE);
+        card.setLayout(new BorderLayout(0, 20));
+        card.setBorder(new EmptyBorder(25, 25, 25, 25));
 
-        String[] jam = new String[16];
-        for (int i = 0; i < 16; i++) jam[i] = String.format("%02d.00", i + 8);
-        cbJamMulai = new JComboBox<>(jam);
-        cbJamSelesai = new JComboBox<>(jam);
+        // HEADER
+        JLabel lblTitle = new JLabel("FORM TAMBAH PESANAN");
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTitle.setForeground(new Color(51, 65, 85));
+        card.add(lblTitle, BorderLayout.NORTH);
 
-        // Jika mode EDIT, isi form dengan data lama
-        if (existingData != null) {
-            tfNama.setText(existingData[0].toString());
-            tfWa.setText(existingData[1].toString());
-            cbTempat.setSelectedItem(existingData[2].toString());
-            cbLokasi.setSelectedItem(existingData[3].toString());
-            cbJamMulai.setSelectedItem(existingData[4].toString());
-            cbJamSelesai.setSelectedItem(existingData[5].toString());
+        // --- KONTEN TENGAH (2 KOLOM) ---
+        JPanel centerContent = new JPanel(new GridLayout(1, 2, 40, 0));
+        centerContent.setOpaque(false);
+
+        // === KIRI (DATA) ===
+        JPanel leftPanel = new JPanel();
+        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
+        leftPanel.setOpaque(false);
+
+        leftPanel.add(createSectionHeader("Data Pesanan"));
+        leftPanel.add(Box.createVerticalStrut(15));
+
+        tfNoPC = createLabeledInput(leftPanel, "No. Komputer", "Pilih dari status di bawah...");
+        tfNoPC.setEditable(false);
+        tfNoPC.setBackground(new Color(248, 250, 252));
+
+        leftPanel.add(Box.createVerticalStrut(15));
+        tfNama = createLabeledInput(leftPanel, "Nama Penyewa", "Masukkan nama penyewa");
+
+        leftPanel.add(Box.createVerticalStrut(15));
+
+        // --- JAM MULAI OTOMATIS ---
+        tfJamMulai = createLabeledInput(leftPanel, "Jam Mulai (Otomatis)", "Jam saat ini...");
+        tfJamMulai.setEditable(false); // Tidak bisa diedit user
+        tfJamMulai.setBackground(new Color(240, 253, 244)); // Warna agak hijau menandakan aktif/otomatis
+        tfJamMulai.setForeground(new Color(22, 101, 52));
+        tfJamMulai.setFont(new Font("Segoe UI", Font.BOLD, 14));
+
+        // Timer agar jam berjalan real-time
+        timerJam = new Timer(1000, e -> updateJamOtomatis());
+        timerJam.start();
+        updateJamOtomatis(); // Panggil sekali di awal
+
+        leftPanel.add(Box.createVerticalGlue());
+
+        // === KANAN (HITUNGAN) ===
+        JPanel rightPanel = new JPanel();
+        rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
+        rightPanel.setOpaque(false);
+
+        rightPanel.add(createSectionHeader("Perhitungan"));
+        rightPanel.add(Box.createVerticalStrut(15));
+
+        tfDurasi = createLabeledInput(rightPanel, "Durasi (Jam)", "Berapa jam?");
+        rightPanel.add(Box.createVerticalStrut(15));
+
+        tfHarga = createLabeledInput(rightPanel, "Harga per Jam (Rp)", "5000");
+        tfHarga.setText("5000");
+        rightPanel.add(Box.createVerticalStrut(15));
+
+        // Box Total
+        JPanel containerTotal = new JPanel(new BorderLayout(0, 5));
+        containerTotal.setOpaque(false);
+        containerTotal.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
+
+        JLabel lblTotalTitle = new JLabel("Total Pembayaran");
+        lblTotalTitle.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblTotalTitle.setForeground(new Color(133, 77, 14));
+
+        lblTotal = new JLabel("Rp 0");
+        lblTotal.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        lblTotal.setForeground(new Color(133, 77, 14));
+
+        JPanel yellowBox = new RoundedPanel(10, COL_YELLOW_BG);
+        yellowBox.setBorder(BorderFactory.createLineBorder(COL_YELLOW_BORDER, 1));
+        yellowBox.setLayout(new BorderLayout());
+        yellowBox.setBorder(new EmptyBorder(10, 15, 10, 15));
+        yellowBox.add(lblTotal, BorderLayout.CENTER);
+
+        containerTotal.add(lblTotalTitle, BorderLayout.NORTH);
+        containerTotal.add(yellowBox, BorderLayout.CENTER);
+
+        rightPanel.add(containerTotal);
+        rightPanel.add(Box.createVerticalGlue());
+
+        centerContent.add(leftPanel);
+        centerContent.add(rightPanel);
+        card.add(centerContent, BorderLayout.CENTER);
+
+        // --- BAWAH (STATUS PC & TOMBOL) ---
+        JPanel bottomContainer = new JPanel();
+        bottomContainer.setLayout(new BoxLayout(bottomContainer, BoxLayout.Y_AXIS));
+        bottomContainer.setOpaque(false);
+
+        JPanel headerStatus = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 10));
+        headerStatus.setOpaque(false);
+        headerStatus.add(createSectionHeader("Status Komputer"));
+        bottomContainer.add(headerStatus);
+
+        pcGridPanel = new JPanel(new GridLayout(2, 5, 10, 10));
+        pcGridPanel.setOpaque(false);
+        initPCGrid();
+        bottomContainer.add(pcGridPanel);
+
+        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        actionPanel.setOpaque(false);
+        actionPanel.setBorder(new EmptyBorder(25, 0, 0, 0));
+
+        JButton btnSimpan = new JButton("Simpan Pesanan");
+        styleButton(btnSimpan, COL_BLUE, Color.WHITE);
+        JButton btnReset = new JButton("Reset");
+        styleButton(btnReset, new Color(51, 65, 85), Color.WHITE);
+
+        actionPanel.add(btnSimpan);
+        actionPanel.add(Box.createHorizontalStrut(15));
+        actionPanel.add(btnReset);
+        bottomContainer.add(actionPanel);
+
+        card.add(bottomContainer, BorderLayout.SOUTH);
+
+        JScrollPane scrollPane = new JScrollPane(card);
+        scrollPane.setBorder(null);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+
+        add(scrollPane, BorderLayout.CENTER);
+
+        // --- LISTENERS ---
+        DocumentListener calcListener = new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { hitungTotal(); }
+            public void removeUpdate(DocumentEvent e) { hitungTotal(); }
+            public void changedUpdate(DocumentEvent e) { hitungTotal(); }
+        };
+        tfDurasi.getDocument().addDocumentListener(calcListener);
+        tfHarga.getDocument().addDocumentListener(calcListener);
+
+        btnSimpan.addActionListener(e -> prosesSimpan());
+        btnReset.addActionListener(e -> resetForm());
+    }
+
+    // --- LOGIKA JAM OTOMATIS ---
+    private void updateJamOtomatis() {
+        if (tfJamMulai != null) {
+            String jamSekarang = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
+            tfJamMulai.setText(jamSekarang);
+        }
+    }
+
+    // --- UI HELPERS ---
+    private JTextField createLabeledInput(JPanel parentPanel, String labelText, String placeholder) {
+        JPanel container = new JPanel(new BorderLayout(0, 5));
+        container.setOpaque(false);
+        container.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+
+        JLabel lbl = new JLabel(labelText);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lbl.setForeground(new Color(100, 116, 139));
+        container.add(lbl, BorderLayout.NORTH);
+
+        JTextField tf = new JTextField();
+        tf.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        tf.setPreferredSize(new Dimension(0, 30));
+
+        tf.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(new Color(203, 213, 225), 1, true),
+                new EmptyBorder(0, 8, 0, 8)
+        ));
+        tf.setToolTipText(placeholder);
+
+        container.add(tf, BorderLayout.CENTER);
+        parentPanel.add(container);
+        return tf;
+    }
+
+    private void initPCGrid() {
+        pcGridPanel.removeAll();
+        for (int i = 1; i <= 10; i++) {
+            String pcName = "PC " + i;
+            boolean isBooked = controller.isPCBooked(pcName);
+            JButton btnPC = new JButton();
+            btnPC.setLayout(new BorderLayout());
+
+            JLabel lblName = new JLabel(pcName, SwingConstants.CENTER);
+            lblName.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            JLabel lblStatus = new JLabel(isBooked ? "● Terisi" : "● Kosong", SwingConstants.CENTER);
+            lblStatus.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+
+            if (isBooked) {
+                btnPC.setBackground(COL_RED_BG);
+                btnPC.setBorder(BorderFactory.createLineBorder(new Color(239, 68, 68), 1));
+                lblName.setForeground(COL_RED_TXT);
+                lblStatus.setForeground(COL_RED_TXT);
+                btnPC.setEnabled(false);
+            } else {
+                btnPC.setBackground(COL_GREEN_BG);
+                btnPC.setBorder(BorderFactory.createLineBorder(new Color(34, 197, 94), 1));
+                lblName.setForeground(COL_GREEN_TXT);
+                lblStatus.setForeground(COL_GREEN_TXT);
+                btnPC.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                int finalI = i;
+                btnPC.addActionListener(e -> tfNoPC.setText("PC " + finalI)); // Simpan "PC X"
+            }
+            btnPC.add(lblName, BorderLayout.CENTER);
+            btnPC.add(lblStatus, BorderLayout.SOUTH);
+            btnPC.setPreferredSize(new Dimension(0, 60));
+
+            pcGridPanel.add(btnPC);
+        }
+        pcGridPanel.revalidate();
+        pcGridPanel.repaint();
+    }
+
+    public void refreshPCStatus() { initPCGrid(); }
+
+    private void hitungTotal() {
+        try {
+            int durasi = Integer.parseInt(tfDurasi.getText());
+            int harga = Integer.parseInt(tfHarga.getText());
+            int total = durasi * harga;
+            NumberFormat indo = NumberFormat.getCurrencyInstance(new Locale("id", "ID"));
+            lblTotal.setText(indo.format(total).replace("Rp", "Rp "));
+        } catch (NumberFormatException e) {
+            lblTotal.setText("Rp 0");
+        }
+    }
+
+    // --- PROSES SIMPAN DENGAN WAKTU OTOMATIS ---
+    private void prosesSimpan() {
+        // Cek validasi dasar
+        if(tfNoPC.getText().isEmpty() || tfNama.getText().isEmpty() || tfDurasi.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Mohon lengkapi Nama, PC, dan Durasi!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+            return;
         }
 
-        formPanel.add(new JLabel("Nama Pemesan:")); formPanel.add(tfNama);
-        formPanel.add(new JLabel("WhatsApp:")); formPanel.add(tfWa);
-        formPanel.add(new JLabel("Cabang:")); formPanel.add(cbTempat);
-        formPanel.add(new JLabel("Paket PC/Console:")); formPanel.add(cbLokasi);
-        formPanel.add(new JLabel("Jam Mulai:")); formPanel.add(cbJamMulai);
-        formPanel.add(new JLabel("Jam Selesai:")); formPanel.add(cbJamSelesai);
+        try {
+            int durasi = Integer.parseInt(tfDurasi.getText());
 
-        JButton btnSimpan = new JButton(rowIndex == -1 ? "Simpan Baru" : "Update Data");
-        btnSimpan.setBackground(rowIndex == -1 ? new Color(33, 150, 243) : new Color(76, 175, 80)); // Biru (Add), Hijau (Edit)
-        btnSimpan.setForeground(Color.WHITE);
-        btnSimpan.setFont(new Font("SansSerif", Font.BOLD, 14));
+            // 1. Ambil Waktu Sekarang (Realtime)
+            LocalTime startTime = LocalTime.now();
 
-        btnSimpan.addActionListener(e -> {
-            String valid = controller.validasiInput(tfNama.getText(), tfWa.getText());
-            if (valid.equals("OK")) {
-                Object[] dataBaru = new Object[]{
-                        tfNama.getText(), tfWa.getText(), cbTempat.getSelectedItem(),
-                        cbLokasi.getSelectedItem(), cbJamMulai.getSelectedItem(), cbJamSelesai.getSelectedItem()
-                };
+            // 2. Hitung Waktu Selesai (Otomatis handle lintas hari)
+            LocalTime endTime = startTime.plusHours(durasi);
 
-                if (editRowIndex == -1) {
-                    controller.tambahData(dataBaru);
-                } else {
-                    controller.updateData(editRowIndex, dataBaru);
-                }
+            // 3. Format ke String "HH:mm" untuk disimpan
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
+            String jamMulaiStr = startTime.format(fmt);
+            String jamSelesaiStr = endTime.format(fmt);
 
-                JOptionPane.showMessageDialog(this, "Data Berhasil Disimpan!");
-                dispose();
-            } else {
-                JOptionPane.showMessageDialog(this, valid, "Error Validasi", JOptionPane.WARNING_MESSAGE);
-            }
-        });
+            // 4. Kirim ke Controller
+            controller.tambahData(new Object[]{
+                    tfNama.getText(),
+                    "-",
+                    tfNoPC.getText(),
+                    String.valueOf(durasi),
+                    jamMulaiStr,
+                    jamSelesaiStr
+            });
 
-        add(formPanel, BorderLayout.CENTER);
-        add(btnSimpan, BorderLayout.SOUTH);
+            JOptionPane.showMessageDialog(this, "Pesanan Berhasil Disimpan!\nWaktu Mulai: " + jamMulaiStr);
+            resetForm();
+
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Durasi harus angka!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void resetForm() {
+        tfNoPC.setText("");
+        tfNama.setText("");
+        tfDurasi.setText("");
+        lblTotal.setText("Rp 0");
+        // Jam tidak perlu di-reset karena otomatis update
+        refreshPCStatus();
+    }
+
+    private JLabel createSectionHeader(String text) {
+        JLabel lbl = new JLabel(text);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lbl.setForeground(COL_BLUE);
+        lbl.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        return lbl;
+    }
+
+    private void styleButton(JButton btn, Color bg, Color fg) {
+        btn.setBackground(bg);
+        btn.setForeground(fg);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btn.setFocusPainted(false);
+        btn.setBorder(new EmptyBorder(12, 25, 12, 25));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+
+    class RoundedPanel extends JPanel {
+        private int r; private Color c;
+        public RoundedPanel(int r, Color c) { this.r=r; this.c=c; setOpaque(false); }
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(c);
+            g2.fillRoundRect(0,0,getWidth(),getHeight(),r,r);
+        }
     }
 }
