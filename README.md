@@ -1,77 +1,83 @@
-# 🎮 Sistem Pemesanan Rental Warnet  
-### Java Swing Desktop Application
+# Aplikasi Pemesanan Warnet
 
----
+Aplikasi Pemesanan Warnet adalah sebuah aplikasi desktop yang memungkinkan pengguna untuk melakukan pemesanan ruang komputer di warnet dengan menggunakan teknologi Java Swing. Aplikasi ini menerapkan operasi CRUD (Create, Read, Update, Delete) untuk mengelola data pemesanan.
 
-Aplikasi desktop berbasis **Java Swing** untuk mengelola data **pemesanan rental warnet** secara efisien.  
-Proyek ini dikembangkan untuk memenuhi **tugas mata kuliah Pemrograman Java GUI**, dengan fokus pada penerapan **CRUD**, **JTable**, serta **penyimpanan data permanen** menggunakan File I/O.
+## Fitur
 
-Aplikasi dirancang dengan tampilan modern, validasi input yang ketat, dan struktur kode yang rapi.
+- **Pemesanan**: Pengguna dapat melakukan pemesanan komputer di warnet.
+- **Login**: Pengguna dapat masuk ke aplikasi dengan menggunakan kredensial yang valid.
+- **Manajemen Data**: Admin dapat mengelola data pemesanan, termasuk menambah, mengedit, dan menghapus pemesanan.
+- **Riwayat Pemesanan**: Melihat riwayat pemesanan sebelumnya.
+- **Dashboard**: Menyajikan informasi mengenai status komputer yang tersedia dan terpakai.
 
----
+## Teknologi yang Digunakan
 
-## 🚀 Fitur Utama
+- **Java**: Bahasa pemrograman utama untuk aplikasi.
+- **Java Swing**: Untuk antarmuka pengguna grafis (GUI).
+- **Serialization**: Untuk penyimpanan data (menggunakan file `.ser`).
+- **Maven**: Untuk manajemen proyek dan dependensi.
 
-Sesuai dengan kriteria tugas, aplikasi ini mencakup:
+## Struktur Proyek
+UAP_PROLAN
+│
+├── src
+│ ├── controller # Kode pengendali aplikasi
+│ │ └── RentalController.java
+│ ├── Main # Kelas utama aplikasi
+│ │ └── App.java
+│ ├── util # Utilitas tambahan seperti pengelolaan data
+│ │ └── DataStorage.java
+│ └── View # Tampilan aplikasi (GUI)
+│ ├── Dashboard.java # Tampilan untuk dashboard
+│ ├── Login.java # Tampilan untuk login
+│ ├── Order.java # Tampilan untuk pemesanan
+│ └── Riwayat.java # Tampilan riwayat pemesanan
+│
+├── target # Folder hasil build dan file serialization
+│ ├── data_active.ser # Data pemesanan aktif
+│ ├── data_history.ser # Riwayat pemesanan
+│ ├── data_rental.ser # Data komputer yang disewa
+│ └── mvnw # Wrapper Maven
+│
+├── module-info.java # Modul-info untuk pengaturan modul Java
+├── README.md # File ini
+└── pom.xml # File konfigurasi Maven
 
-- **Full CRUD (Create, Read, Update, Delete)**  
-  Mengelola data pemesanan rental warnet secara real-time.
 
-- **Multi-Page Interface (Konseptual)**  
-  Pemisahan antara **Form Input Data** dan **Halaman Tabel Data**.
+## Cara Menggunakan
 
-- **Validasi Input**  
-  Sistem akan menampilkan peringatan apabila data wajib belum diisi.
+1. **Clone Proyek**  
+   Clone repositori ini ke dalam sistem Anda:
+git clone https://github.com/revaandh/UAP_PROLAN.git
 
-- **Pilihan Jam Otomatis**  
-  Jam mulai dan jam selesai tersedia dalam rentang **08.00 – 23.00** menggunakan `JComboBox`.
 
-- **Penyimpanan Data Permanen**  
-  Data tetap tersimpan meskipun aplikasi ditutup.
+2. **Instalasi dan Setup**  
+Pastikan Anda memiliki Java Development Kit (JDK) dan Maven terpasang di sistem Anda.  
+- **JDK**: Unduh dari [situs resmi Oracle](https://www.oracle.com/java/technologies/javase-jdk11-downloads.html) atau gunakan OpenJDK.
+- **Maven**: Ikuti instruksi di [situs resmi Maven](https://maven.apache.org/install.html).
 
-- **Modern UI**  
-  Styling tombol, penggunaan font *Segoe UI*, dan tampilan `JTable` yang rapi.
+3. **Build Proyek**  
+Setelah semua tergantung terinstal, jalankan perintah berikut di direktori proyek:
 
----
+4. **Jalankan Aplikasi**  
+Untuk menjalankan aplikasi, Anda dapat menggunakan perintah berikut:
 
-## 🧾 Data yang Dikelola
+## Kontribusi
 
-Aplikasi ini mengelola data berikut:
+Jika Anda ingin berkontribusi pada proyek ini, silakan ikuti langkah-langkah berikut:
 
-- Nama Reservasi  
-- Nomor WhatsApp  
-- Tempat Rental  
-  - Begawan  
-  - Sulfat  
-- Paket / Lokasi:
-  - Reguler PS3  
-  - Reguler PS4  
-  - Privat PS3 + Netflix  
-  - Privat PS4 + Netflix  
-  - VVIP  
-- Jam Mulai (08.00 – 23.00)  
-- Jam Selesai (08.00 – 23.00)  
+1. Fork repositori ini.
+2. Buat branch baru (`git checkout -b fitur-baru`).
+3. Lakukan perubahan yang diinginkan dan lakukan commit (`git commit -am 'Menambahkan fitur baru'`).
+4. Push ke branch Anda (`git push origin fitur-baru`).
+5. Kirim pull request.
 
----
+## Lisensi
 
-## 🧱 Arsitektur Aplikasi
+Proyek ini dilisensikan di bawah Lisensi MIT - lihat [LICENSE](LICENSE) untuk detail.
 
-Aplikasi ini menggunakan pendekatan **Single-Class GUI Application** dengan pemisahan logika sebagai berikut:
+## Kontak
 
-- **View & Controller**  
-  - `HelloApplication.java`  
-  Menangani tampilan GUI, event handling, dan interaksi pengguna.
+- **Nama**: [Bayu adi nugroho & Revansa Adha Dwi Yuliarto]
+- **Email**: [Bayu888@gmail.com]
 
-- **Data Model (JTable)**  
-  - `DefaultTableModel`  
-  Digunakan untuk mengelola dan menampilkan data pemesanan.
-
-- **Persistence Layer**  
-  - File Serialization (`ObjectOutputStream` & `ObjectInputStream`)  
-  Digunakan untuk menyimpan dan memuat data dari file lokal.
-
----
-
-## 💾 Mekanisme Penyimpanan Data
-
-- Data disimpan dalam file lokal:
