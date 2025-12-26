@@ -1,8 +1,9 @@
 package controller;
 
+import util.DataStorage; // Import penyimpanan baru
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import java.io.*;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Vector;
@@ -16,13 +17,14 @@ public class RentalController {
     private Timer timerCekWaktu;
 
     public RentalController() {
-        // Model Aktif
-        modelActive = new DefaultTableModel(new String[]{"Nama", "WA", "Tempat", "Paket", "Jam Mulai", "Jam Selesai"}, 0) {
+        // PERBAIKAN: Tambah kolom "Tanggal" di urutan terakhir (Index 6)
+        String[] columns = {"Nama", "WA", "Tempat", "Paket", "Jam Mulai", "Jam Selesai", "Tanggal"};
+
+        modelActive = new DefaultTableModel(columns, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
 
-        // Model Riwayat
-        modelHistory = new DefaultTableModel(new String[]{"Nama", "WA", "Tempat", "Paket", "Jam Mulai", "Jam Selesai"}, 0) {
+        modelHistory = new DefaultTableModel(columns, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
 
@@ -51,56 +53,56 @@ public class RentalController {
                 LocalTime jamSelesai = LocalTime.parse(jamSelesaiStr, DateTimeFormatter.ofPattern("HH:mm"));
 
                 boolean sudahSelesai = false;
-
                 if (jamSelesai.isBefore(jamMulai)) {
-                    // KASUS LINTAS HARI (Contoh: Mulai 23.00, Selesai 01.00)
-                    // Pesanan selesai jika:
-                    // Sekarang > Jam Selesai TAPI Sekarang < Jam Mulai
-                    // (Artinya sudah lewat tengah malam dan lewat jam selesai)
-                    if (sekarang.isAfter(jamSelesai) && sekarang.isBefore(jamMulai)) {
-                        sudahSelesai = true;
-                    }
+                    if (sekarang.isAfter(jamSelesai) && sekarang.isBefore(jamMulai)) sudahSelesai = true;
                 } else {
-                    // KASUS NORMAL (Hari yang sama)
-                    if (sekarang.isAfter(jamSelesai)) {
-                        sudahSelesai = true;
-                    }
+                    if (sekarang.isAfter(jamSelesai)) sudahSelesai = true;
                 }
 
                 if (sudahSelesai) {
                     Vector rowData = (Vector) modelActive.getDataVector().get(i);
+                    // Pindahkan SEMUA data termasuk Tanggal ke history
                     modelHistory.addRow(new Object[]{
                             rowData.get(0), rowData.get(1), rowData.get(2),
-                            rowData.get(3), rowData.get(4), rowData.get(5)
+                            rowData.get(3), rowData.get(4), rowData.get(5),
+                            rowData.get(6) // Tanggal ikut dipindah
                     });
                     modelActive.removeRow(i);
                     adaPerubahan = true;
                 }
-            } catch (Exception ex) {
-                // Abaikan error format jam, jangan hapus data
-            }
+            } catch (Exception ex) {}
         }
-
         if (adaPerubahan) simpanData();
     }
 
     public boolean isPCBooked(String pcName) {
-        // Loop semua data di tabel aktif
         for (int i = 0; i < modelActive.getRowCount(); i++) {
-            // Kolom "Tempat" ada di index ke-2
-            String bookedPC = modelActive.getValueAt(i, 2).toString();
-
-            // Jika nama PC sama (misal "PC 1" == "PC 1"), berarti sedang dipakai
-            if (bookedPC.equalsIgnoreCase(pcName)) {
-                return true;
-            }
+            if (modelActive.getValueAt(i, 2).toString().equalsIgnoreCase(pcName)) return true;
         }
-        return false; // Tidak ditemukan, berarti PC Aman (Kosong)
+        return false;
     }
 
+    // Update Tambah Data: Otomatis masukkan Tanggal Hari Ini
     public void tambahData(Object[] data) {
-        modelActive.addRow(data);
+        // Data dari view hanya 6 item, kita tambah item ke-7 yaitu Tanggal
+        Object[] fullData = new Object[7];
+        System.arraycopy(data, 0, fullData, 0, 6);
+
+        // Simpan tanggal format dd/MM/yyyy
+        fullData[6] = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+        modelActive.addRow(fullData);
         simpanData();
+    }
+
+    public void updateData(int row, String nama, String pc, String durasi, String jamSelesai) {
+        if (row >= 0 && row < modelActive.getRowCount()) {
+            modelActive.setValueAt(nama, row, 0);
+            modelActive.setValueAt(pc, row, 2);
+            modelActive.setValueAt(durasi, row, 3);
+            modelActive.setValueAt(jamSelesai, row, 5);
+            simpanData();
+        }
     }
 
     public void hapusData(int row) {
@@ -110,28 +112,14 @@ public class RentalController {
         }
     }
 
+    // --- MENGGUNAKAN CLASS BARU (DataStorage) ---
     private void simpanData() {
-        simpanFile(FILE_ACTIVE, modelActive.getDataVector());
-        simpanFile(FILE_HISTORY, modelHistory.getDataVector());
-    }
-
-    private void simpanFile(String path, Vector data) {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(path))) {
-            oos.writeObject(data);
-        } catch (IOException e) { e.printStackTrace(); }
+        DataStorage.simpan(FILE_ACTIVE, modelActive);
+        DataStorage.simpan(FILE_HISTORY, modelHistory);
     }
 
     private void muatData() {
-        muatFile(FILE_ACTIVE, modelActive);
-        muatFile(FILE_HISTORY, modelHistory);
-    }
-
-    private void muatFile(String path, DefaultTableModel model) {
-        File file = new File(path);
-        if (!file.exists()) return;
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(path))) {
-            Vector<Vector> data = (Vector<Vector>) ois.readObject();
-            for (Vector row : data) model.addRow(row);
-        } catch (Exception e) { e.printStackTrace(); }
+        DataStorage.muat(FILE_ACTIVE, modelActive);
+        DataStorage.muat(FILE_HISTORY, modelHistory);
     }
 }

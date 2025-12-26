@@ -1,4 +1,4 @@
-package main;
+package View;
 
 import controller.RentalController;
 
@@ -25,7 +25,7 @@ public class Dashboard extends JFrame {
     private JLabel lblTotalPenyewa, lblTotalPendapatan;
 
     // Referensi ke panel order agar bisa direfresh
-    private order orderPanel;
+    private Order orderPanel;
 
     public Dashboard() {
         controller = new RentalController();
@@ -50,6 +50,7 @@ public class Dashboard extends JFrame {
         // TAB NAV
         JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         navPanel.setOpaque(false);
+        navPanel.setBorder(new EmptyBorder(0, 20, 0, 0));
 
         btnTabTabel = createTabButton("📊 Tabel Penyewa", true);
         btnTabTambah = createTabButton("➕ Tambah Pesanan", false);
@@ -64,13 +65,13 @@ public class Dashboard extends JFrame {
         cardLayout = new CardLayout();
         mainContentPanel = new JPanel(cardLayout);
         mainContentPanel.setOpaque(false);
-        mainContentPanel.setBorder(new EmptyBorder(15, 0, 0, 0));
+        mainContentPanel.setBorder(new EmptyBorder(5, 0, 0, 0));
 
         // View 1: Dashboard Table
         mainContentPanel.add(createDashboardPanel(), "TABEL");
 
         // View 2: Order Form (Simpan referensi ke variabel)
-        orderPanel = new order(controller);
+        orderPanel = new Order(controller);
         mainContentPanel.add(orderPanel, "ORDER");
 
         // View 3: Riwayat (Placeholder awal)
@@ -136,8 +137,8 @@ public class Dashboard extends JFrame {
         card.setLayout(new BorderLayout());
         card.setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        JLabel lblTitle = new JLabel("📋 DAFTAR PENYEWA AKTIF (REALTIME)");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        JLabel lblTitle = new JLabel("📋 DAFTAR PENYEWA AKTIF");
+        lblTitle.setFont(new Font("Segoe UI Emoji", Font.BOLD, 16));
         lblTitle.setBorder(new EmptyBorder(0,0,15,0));
         card.add(lblTitle, BorderLayout.NORTH);
 
@@ -163,6 +164,12 @@ public class Dashboard extends JFrame {
         // Tombol Hapus Paksa
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btnPanel.setOpaque(false);
+
+        JButton btnEdit = new JButton("✏️ Edit Pesanan");
+        styleButton(btnEdit, new Color(245, 158, 11), Color.WHITE); // Warna Oranye
+        btnEdit.addActionListener(e -> showEditDialog());
+        btnPanel.add(btnEdit);
+
         JButton btnHapus = new JButton("Batal / Hapus Paksa");
         styleButton(btnHapus, new Color(220, 38, 38), Color.WHITE);
         btnHapus.addActionListener(e -> {
@@ -180,8 +187,11 @@ public class Dashboard extends JFrame {
     }
 
     private void refreshTableData() {
+        // 1. Simpan baris yang sedang dipilih (jika ada)
+        int selectedRow = table.getSelectedRow();
+
         DefaultTableModel vModel = (DefaultTableModel) table.getModel();
-        vModel.setRowCount(0);
+        vModel.setRowCount(0); // Ini yang menyebabkan seleksi hilang
 
         DefaultTableModel dataRaw = controller.getModel();
         int totalUang = 0;
@@ -203,6 +213,12 @@ public class Dashboard extends JFrame {
 
         if(lblTotalPenyewa != null) lblTotalPenyewa.setText(String.valueOf(dataRaw.getRowCount()));
         if(lblTotalPendapatan != null) lblTotalPendapatan.setText("Rp " + totalUang);
+
+        // 2. Kembalikan seleksi (Restore Selection)
+        // Cek apakah baris yang tadi dipilih masih ada (valid) di data baru
+        if (selectedRow >= 0 && selectedRow < vModel.getRowCount()) {
+            table.setRowSelectionInterval(selectedRow, selectedRow);
+        }
     }
 
     private String safeStr(Object o) { return o == null ? "-" : o.toString(); }
@@ -213,13 +229,14 @@ public class Dashboard extends JFrame {
         header.setPreferredSize(new Dimension(0, 70));
         header.setBorder(new EmptyBorder(0, 30, 0, 30));
 
-        JLabel title = new JLabel("🖥️ Warnet Management System");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        JLabel title = new JLabel("🖥️ Warnet Sumber Rejeki");
+        title.setFont(new Font("Segoe UI Emoji", Font.BOLD, 18));
         title.setForeground(Color.WHITE);
 
         JButton btnLogout = new JButton("Logout");
         styleButton(btnLogout, new Color(239, 68, 68), Color.WHITE);
-        btnLogout.addActionListener(e -> { new main().setVisible(true); dispose(); });
+        btnLogout.addActionListener(e -> { new Login().setVisible(true); dispose(); });
+
 
         header.add(title, BorderLayout.WEST);
         header.add(btnLogout, BorderLayout.EAST);
@@ -233,47 +250,74 @@ public class Dashboard extends JFrame {
     }
 
     private void styleTabButton(JButton btn, boolean isActive) {
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        // Gunakan font Emoji agar icon tampil benar
+        btn.setFont(new Font("Segoe UI Emoji", Font.BOLD, 14));
         btn.setFocusPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
         if(isActive) {
+            btn.setContentAreaFilled(true); // Ada background warnanya
             btn.setBackground(COL_ACTIVE_TAB);
             btn.setForeground(Color.WHITE);
-            btn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+            // Hilangkan border garis, ganti dengan padding saja
+            btn.setBorder(new EmptyBorder(10, 25, 10, 25));
         } else {
-            btn.setBackground(COL_INACTIVE_TAB);
-            btn.setForeground(Color.GRAY);
-            btn.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
+            btn.setContentAreaFilled(false); // Transparan! (Menyatu dengan background)
+            btn.setForeground(new Color(100, 116, 139)); // Warna teks abu-abu (Slate)
+            // Hapus LineBorder, ganti dengan padding saja agar teks sejajar
+            btn.setBorder(new EmptyBorder(10, 25, 10, 25));
         }
     }
 
     private void styleButton(JButton btn, Color bg, Color fg) {
         btn.setBackground(bg);
         btn.setForeground(fg);
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btn.setFont(new Font("Segoe UI Emoji", Font.BOLD, 12));
         btn.setFocusPainted(false);
         btn.setBorder(new EmptyBorder(8, 15, 8, 15));
     }
 
     private void styleTable(JTable table) {
         table.setRowHeight(40);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        table.getTableHeader().setBackground(COL_TABLE_HEAD);
-        table.getTableHeader().setForeground(Color.WHITE);
-        table.getTableHeader().setPreferredSize(new Dimension(0, 40));
+        table.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 14));
+
+        // Header Tabel
+        JTableHeader header = table.getTableHeader();
+        header.setBackground(COL_TABLE_HEAD);
+        header.setForeground(Color.WHITE);
+        header.setFont(new Font("Segoe UI Emoji", Font.BOLD, 14));
+        // Tambahan: Agar Header juga Rata Tengah
+        ((DefaultTableCellRenderer)header.getDefaultRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
+        header.setPreferredSize(new Dimension(0, 45));
+
+        // Isi Tabel
         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                // Panggil super
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+
+                // --- BAGIAN INI MEMBUAT TEKS RATA TENGAH ---
+                setHorizontalAlignment(SwingConstants.CENTER);
+                // -------------------------------------------
+
                 if(!isSelected) c.setBackground(Color.WHITE);
                 setBorder(new EmptyBorder(0, 10, 0, 10));
 
-                if (column == 4 && value.toString().equals("Aktif")) { // Status
+                // Khusus Kolom Status (Kolom index 4) menggunakan Panel khusus
+                if (column == 4 && value.toString().equals("Aktif")) {
                     JLabel lbl = new JLabel("Aktif", SwingConstants.CENTER);
                     lbl.setForeground(new Color(22, 163, 74));
-                    lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                    lbl.setFont(new Font("Segoe UI Emoji", Font.BOLD, 12));
+
                     JPanel p = new RoundedPanel(15, new Color(220, 252, 231));
-                    p.setLayout(new GridBagLayout()); p.add(lbl);
-                    JPanel w = new JPanel(new FlowLayout(FlowLayout.CENTER)); w.setBackground(isSelected?table.getSelectionBackground():Color.WHITE); w.add(p);
+                    p.setLayout(new GridBagLayout());
+                    p.add(lbl);
+
+                    // Panel pembungkus agar rounded panel tetap di tengah
+                    JPanel w = new JPanel(new FlowLayout(FlowLayout.CENTER));
+                    w.setBackground(isSelected ? table.getSelectionBackground() : Color.WHITE);
+                    w.add(p);
                     return w;
                 }
                 return c;
@@ -286,7 +330,7 @@ public class Dashboard extends JFrame {
         p.setLayout(new BorderLayout());
         p.setBorder(new EmptyBorder(15, 15, 15, 15));
         JLabel t = new JLabel(title); t.setForeground(txt);
-        val.setFont(new Font("Segoe UI", Font.BOLD, 24)); val.setForeground(txt);
+        val.setFont(new Font("Segoe UI Emoji", Font.BOLD, 24)); val.setForeground(txt);
         p.add(t, BorderLayout.NORTH); p.add(val, BorderLayout.CENTER);
         return p;
     }
@@ -300,4 +344,150 @@ public class Dashboard extends JFrame {
             g2.setColor(c); g2.fillRoundRect(0,0,getWidth(),getHeight(),r,r);
         }
     }
+    private void showEditDialog() {
+        int row = table.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(this, "Pilih baris yang ingin diedit dulu!");
+            return;
+        }
+
+        // 1. Ambil Data Lama
+        DefaultTableModel model = controller.getModel();
+        String oldNama = model.getValueAt(row, 0).toString();
+        String oldPC = model.getValueAt(row, 2).toString();
+        String oldDurasi = model.getValueAt(row, 3).toString();
+        String jamMulaiStr = model.getValueAt(row, 4).toString(); // Jam mulai tetap, durasi diubah -> jam selesai berubah
+
+        // 2. Buat Dialog
+        JDialog dialog = new JDialog(this, "Edit Pesanan", true);
+        dialog.setSize(400, 500);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout());
+
+        JPanel formPanel = new JPanel();
+        formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
+        formPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        formPanel.setBackground(Color.WHITE);
+
+        // --- INPUT FIELD (Gaya mirip order.java) ---
+        JTextField tfNama = createInputForDialog(formPanel, "Nama Penyewa", oldNama);
+
+        // Combo Box untuk PC (Supaya aman validasinya)
+        JPanel pcContainer = new JPanel(new BorderLayout(0, 5));
+        pcContainer.setOpaque(false);
+        pcContainer.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+        JLabel lblPC = new JLabel("Pilih Komputer");
+        lblPC.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        String[] listPC = new String[10];
+        for(int i=0; i<10; i++) listPC[i] = "PC " + (i+1);
+        JComboBox<String> cbPC = new JComboBox<>(listPC);
+        cbPC.setSelectedItem(oldPC); // Pilih PC lama
+        cbPC.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        pcContainer.add(lblPC, BorderLayout.NORTH);
+        pcContainer.add(cbPC, BorderLayout.CENTER);
+        formPanel.add(pcContainer);
+        formPanel.add(Box.createVerticalStrut(15));
+
+        JTextField tfDurasi = createInputForDialog(formPanel, "Durasi (Jam)", oldDurasi);
+        JTextField tfHarga = createInputForDialog(formPanel, "Harga per Jam (Rp)", "5000"); // Default 5000
+
+        // Label Total (Auto Hitung)
+        JLabel lblTotal = new JLabel("Total: Rp -");
+        lblTotal.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTotal.setForeground(new Color(30, 58, 138));
+        lblTotal.setAlignmentX(Component.LEFT_ALIGNMENT);
+        formPanel.add(Box.createVerticalStrut(10));
+        formPanel.add(lblTotal);
+
+        dialog.add(formPanel, BorderLayout.CENTER);
+
+        // --- TOMBOL SAVE ---
+        JButton btnSave = new JButton("Simpan Perubahan");
+        styleButton(btnSave, COL_ACTIVE_TAB, Color.WHITE);
+        btnSave.addActionListener(e -> {
+            try {
+                String newNama = tfNama.getText();
+                String newPC = (String) cbPC.getSelectedItem();
+                int newDurasi = Integer.parseInt(tfDurasi.getText());
+                int harga = Integer.parseInt(tfHarga.getText());
+
+                // Validasi PC: Jika ganti PC, cek apakah PC baru kosong?
+                if (!newPC.equals(oldPC) && controller.isPCBooked(newPC)) {
+                    JOptionPane.showMessageDialog(dialog, "PC tersebut sedang dipakai!", "Gagal", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // Hitung Jam Selesai Baru
+                java.time.LocalTime start = java.time.LocalTime.parse(jamMulaiStr, java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+                java.time.LocalTime end = start.plusHours(newDurasi);
+                String newJamSelesai = end.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+
+                // Simpan ke Controller
+                controller.updateData(row, newNama, newPC, String.valueOf(newDurasi), newJamSelesai);
+
+                refreshTableData();
+                orderPanel.refreshPCStatus(); // Refresh warna PC di tab tambah
+                dialog.dispose();
+                JOptionPane.showMessageDialog(this, "Data berhasil diperbarui!");
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialog, "Pastikan durasi & harga berupa angka!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        JPanel btnPanelDialog = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        btnPanelDialog.setBackground(Color.WHITE);
+        btnPanelDialog.add(btnSave);
+        dialog.add(btnPanelDialog, BorderLayout.SOUTH);
+
+        // Listener Hitung Otomatis
+        javax.swing.event.DocumentListener dl = new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { calc(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { calc(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { calc(); }
+            void calc() {
+                try {
+                    int d = Integer.parseInt(tfDurasi.getText());
+                    int h = Integer.parseInt(tfHarga.getText());
+                    lblTotal.setText("Total: Rp " + (d*h));
+                } catch(Exception ex){}
+            }
+        };
+        tfDurasi.getDocument().addDocumentListener(dl);
+        tfHarga.getDocument().addDocumentListener(dl);
+
+        // Trigger hitung awal
+        try {
+            int d = Integer.parseInt(tfDurasi.getText());
+            int h = Integer.parseInt(tfHarga.getText());
+            lblTotal.setText("Total: Rp " + (d*h));
+        } catch(Exception ex){}
+
+        dialog.setVisible(true);
+    }
+
+    // Helper UI untuk Dialog
+    private JTextField createInputForDialog(JPanel p, String label, String value) {
+        JPanel c = new JPanel(new BorderLayout(0, 5));
+        c.setOpaque(false);
+        c.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+
+        JLabel l = new JLabel(label);
+        l.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        l.setForeground(Color.GRAY);
+
+        JTextField t = new JTextField(value);
+        t.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        t.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200,200,200)),
+                new EmptyBorder(5, 8, 5, 8)
+        ));
+
+        c.add(l, BorderLayout.NORTH);
+        c.add(t, BorderLayout.CENTER);
+        p.add(c);
+        p.add(Box.createVerticalStrut(15));
+        return t;
+    }
+
 }

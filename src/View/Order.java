@@ -1,4 +1,4 @@
-package main;
+package View;
 
 import controller.RentalController;
 
@@ -13,7 +13,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
-public class order extends JPanel {
+public class Order extends JPanel {
 
     private RentalController controller;
     private JTextField tfNoPC, tfNama, tfJamMulai, tfDurasi, tfHarga;
@@ -31,7 +31,7 @@ public class order extends JPanel {
     private final Color COL_YELLOW_BG = new Color(254, 249, 195);
     private final Color COL_YELLOW_BORDER = new Color(250, 204, 21);
 
-    public order(RentalController controller) {
+    public Order(RentalController controller) {
         this.controller = controller;
         setLayout(new BorderLayout());
         setBackground(COL_BG);
@@ -43,8 +43,8 @@ public class order extends JPanel {
         card.setBorder(new EmptyBorder(25, 25, 25, 25));
 
         // HEADER
-        JLabel lblTitle = new JLabel("FORM TAMBAH PESANAN");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        JLabel lblTitle = new JLabel("➕ FORM TAMBAH PESANAN");
+        lblTitle.setFont(new Font("Segoe UI Emoji", Font.BOLD, 16));
         lblTitle.setForeground(new Color(51, 65, 85));
         card.add(lblTitle, BorderLayout.NORTH);
 
@@ -342,4 +342,5 @@ public class order extends JPanel {
             g2.fillRoundRect(0,0,getWidth(),getHeight(),r,r);
         }
     }
+
 }

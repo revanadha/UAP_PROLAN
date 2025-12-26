@@ -1,6 +1,4 @@
-package main;
-
-import controller.RentalController;
+package View;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -8,9 +6,8 @@ import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.awt.geom.RoundRectangle2D;
 
-public class main extends JFrame {
+public class Login extends JFrame {
 
     // Warna Palet sesuai Screenshot
     private final Color COLOR_BG = new Color(235, 240, 245); // Background layar
@@ -22,7 +19,7 @@ public class main extends JFrame {
     private JTextField tfUser;
     private JPasswordField pfPass;
 
-    public main() {
+    public Login() {
         setTitle("Warnet penghuni surga");
         setSize(900, 600); // Ukuran window
         setLocationRelativeTo(null);
@@ -227,9 +224,5 @@ public class main extends JFrame {
             // Tapi karena header ada di dalam panel anak, kita biarkan logic header di atas.
             // Di sini kita gambar border luar saja jika perlu.
         }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new main().setVisible(true));
     }
 }

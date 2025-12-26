@@ -1,4 +1,4 @@
-package main;
+package View;
 
 import controller.RentalController;
 
@@ -42,7 +42,7 @@ public class Riwayat extends JPanel {
 
         // Judul
         JLabel lblTitle = new JLabel("📜 RIWAYAT PESANAN");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTitle.setFont(new Font("Segoe UI Emoji", Font.BOLD, 16));
         lblTitle.setForeground(new Color(51, 65, 85));
 
         // Panel Filter
@@ -154,29 +154,38 @@ public class Riwayat extends JPanel {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         model.setRowCount(0);
 
-        DefaultTableModel rawData = controller.getModel();
+        // Ambil data history dari controller
+        DefaultTableModel rawData = controller.getModelHistory();
+
         int totalTrx = 0;
         int totalJam = 0;
         int totalUang = 0;
 
-        // Format Tanggal Hari Ini (Simulasi karena DB belum simpan tanggal)
-        String today = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
-
         for (int i = 0; i < rawData.getRowCount(); i++) {
-            // Data Controller: [Nama, WA, PC(Tempat), Durasi(Paket), JamMulai, JamSelesai]
+            // Ambil data sesuai kolom baru di Controller
             String nama = rawData.getValueAt(i, 0).toString();
+            // Index 1 adalah WA (tidak ditampilkan di tabel riwayat)
             String pc = rawData.getValueAt(i, 2).toString();
             String durasiStr = rawData.getValueAt(i, 3).toString();
             String jamMulai = rawData.getValueAt(i, 4).toString();
             String jamSelesai = rawData.getValueAt(i, 5).toString();
 
+            // PERBAIKAN: Ambil Tanggal dari Index 6 (Data Asli)
+            String tanggalAsli = "-";
+            try {
+                tanggalAsli = rawData.getValueAt(i, 6).toString();
+            } catch (Exception e) {
+                // Fallback jika data lama belum punya tanggal
+                tanggalAsli = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
+            }
+
             int durasi = 0;
             try { durasi = Integer.parseInt(durasiStr); } catch(Exception e){}
             int subTotal = durasi * 5000;
 
-            // Tambah ke tabel visual
+            // Masukkan ke tabel visual Riwayat
             model.addRow(new Object[]{
-                    today,
+                    tanggalAsli, // Gunakan tanggal asli
                     pc,
                     nama,
                     jamMulai,
@@ -185,18 +194,16 @@ public class Riwayat extends JPanel {
                     "Rp " + subTotal
             });
 
-            // Agregasi Data
             totalTrx++;
             totalJam += durasi;
             totalUang += subTotal;
         }
 
-        // Update Labels
+        // Update Labels Statistik
         lblTotalTransaksi.setText(String.valueOf(totalTrx));
         lblTotalJam.setText(totalJam + " Jam");
         lblTotalPendapatan.setText("Rp " + totalUang);
     }
-
     // --- UI HELPERS ---
 
     private JPanel createSummaryCard(String title, JLabel value, Color bg, Color txtColor) {
