@@ -16,7 +16,7 @@ Aplikasi Pemesanan Warnet adalah sebuah aplikasi desktop yang memungkinkan pengg
 - **Java Swing**: Untuk antarmuka pengguna grafis (GUI).
 - **Serialization**: Untuk penyimpanan data (menggunakan file `.ser`).
 - **Maven**: Untuk manajemen proyek dan dependensi.
-
+''
 ## Struktur Proyek
 UAP_PROLAN
 │
@@ -42,7 +42,7 @@ UAP_PROLAN
 ├── module-info.java # Modul-info untuk pengaturan modul Java
 ├── README.md # File ini
 └── pom.xml # File konfigurasi Maven
-##
+''
 
 ## Cara Menggunakan
 
