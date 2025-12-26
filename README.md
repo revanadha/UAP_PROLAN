@@ -18,6 +18,7 @@ Aplikasi Pemesanan Warnet adalah sebuah aplikasi desktop yang memungkinkan pengg
 - **Maven**: Untuk manajemen proyek dan dependensi.
 
 ## Struktur Proyek
+--
 UAP_PROLAN
 │
 ├── src
@@ -42,7 +43,7 @@ UAP_PROLAN
 ├── module-info.java # Modul-info untuk pengaturan modul Java
 ├── README.md # File ini
 └── pom.xml # File konfigurasi Maven
-
+--
 
 ## Cara Menggunakan
 
